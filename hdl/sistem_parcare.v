@@ -1,4 +1,6 @@
-module sistem_parcare #(parameter NR_TACTE_SENZOR = 8'd20)(
+module sistem_parcare #(parameter NR_TACTE_SENZOR = 8'd20,
+                                  TACTE_PER_ORA   = 8'd200
+)(
     //semnale generale
     input                clk_i,
     input                rst_ni,
@@ -21,9 +23,14 @@ assign pready_o = 1'b1;
 
 reg  [2:0]   stare_curenta;
 reg  [3:0]   nr_locuri_libere; //adresa: ...
-wire [7:0]   x_tacte_ceas = NR_TACTE_SENZOR;
 reg  [7:0]   counter;
 reg          intrare_iesire; // 1 == intrare, 0 == iesire
+reg  [4:0]   ora_curenta;
+reg  [31:0]  counter_ora; 
+reg  [4:0]   ora_start;
+reg  [4:0]   ora_stop;
+
+wire sistem_activ = (ora_curenta >= ora_start) && (ora_curenta < ora_stop);
 
 localparam IDLE        = 3'b000;
 localparam RIDICARE    = 3'b001;
@@ -37,14 +44,14 @@ always @(posedge clk_i or negedge rst_ni) begin
   else begin
       case (stare_curenta)
           IDLE:
-              if((btn_i == 2'b01 && nr_locuri_libere > 0) || (btn_i == 2'b10 && nr_locuri_libere < 15))
+              if(sistem_activ && ((btn_i == 2'b01 && nr_locuri_libere > 0) || (btn_i == 2'b10 && nr_locuri_libere < 15)))
                   stare_curenta <= RIDICARE;
           
           RIDICARE:
               stare_curenta <= ASTEAPTA;
 
           ASTEAPTA:
-              if(counter >= x_tacte_ceas && ~senzor_proxim_i)
+              if(counter >= NR_TACTE_SENZOR && ~senzor_proxim_i)
                   stare_curenta <= COBORARE;
           
           COBORARE:
@@ -56,6 +63,37 @@ always @(posedge clk_i or negedge rst_ni) begin
           default: stare_curenta <= IDLE;
       endcase
       end
+end
+
+always @(posedge clk_i or negedge rst_ni) begin
+    if (~rst_ni)
+        counter_ora <= 8'd0;
+    else if (counter_ora >= TACTE_PER_ORA - 1)
+            counter_ora <= 8'd0;
+         else counter_ora <= counter_ora + 1;
+end
+
+always @(posedge clk_i or negedge rst_ni) begin
+    if (~rst_ni)
+        ora_curenta <= 5'd0;
+    else if (counter_ora >= TACTE_PER_ORA - 1)
+            if (ora_curenta >= 23)
+               ora_curenta <= 5'd0;
+            else ora_curenta <= ora_curenta + 1;
+end
+
+always @(posedge clk_i or negedge rst_ni) begin
+    if (~rst_ni)
+        ora_start <= 5'd8;
+    else if (psel_i && penable_i && pwrite_i && (paddr_i == 2'b10)) 
+            ora_start <= pwdata_i[4:0];
+end
+
+always @(posedge clk_i or negedge rst_ni) begin
+    if (~rst_ni)
+        ora_stop <= 5'd22;
+    else if (psel_i && penable_i && pwrite_i && (paddr_i == 2'b11)) 
+            ora_stop <= pwdata_i[4:0];
 end
 
 always @(posedge clk_i or negedge rst_ni) begin
@@ -77,17 +115,12 @@ end
 
 always @(posedge clk_i or negedge rst_ni) begin
   if(~rst_ni)
-      nr_locuri_libere <= 4'd10;
-  else begin
-      if (psel_i && penable_i && pwrite_i && (paddr_i == 2'b01))
-          nr_locuri_libere <= pwdata_i[3:0];
-      else if (stare_curenta == UPDATE) begin
+    nr_locuri_libere <= 4'd10;
+  else if (stare_curenta == UPDATE) 
           if (intrare_iesire)
-              nr_locuri_libere <= nr_locuri_libere - 1'b1;
+             nr_locuri_libere <= nr_locuri_libere - 1'b1;
           else 
-              nr_locuri_libere <= nr_locuri_libere + 1'b1;
-      end
-  end
+             nr_locuri_libere <= nr_locuri_libere + 1'b1;   
 end
 
 always @(posedge clk_i or negedge rst_ni) begin
@@ -105,10 +138,11 @@ always @(posedge clk_i or negedge rst_ni) begin
       prdata_o <= 8'd0;
   else if (psel_i && !pwrite_i) begin
       case (paddr_i)
-          //2'b00: prdata_o <= {6'b0, btn_i};          
+          2'b00: prdata_o <= {3'b0, ora_curenta};          
           2'b01: prdata_o <= {4'b0, nr_locuri_libere};       
-        //  2'b10: prdata_o <= {6'b0, stare_bariera_o, senzor_proxim_i}; 
-      //    2'b11: prdata_o <= x_tacte_ceas;              
+          2'b10: prdata_o <= {3'b0, ora_start}; 
+          2'b11: prdata_o <= {3'b0, ora_stop}; 
+          default: prdata_o <= 8'd0;             
       endcase
   end
 end
