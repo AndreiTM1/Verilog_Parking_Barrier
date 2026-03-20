@@ -25,7 +25,7 @@ assign pready_o         = 1'b1;
 
 reg  [2:0]   stare_curenta;
 reg  [3:0]   nr_locuri_libere; //adresa: ...
-reg  [7:0]   counter;
+reg  [7:0]   counter_senzor;
 reg          intrare_iesire; // 1 == intrare, 0 == iesire
 reg  [4:0]   ora_curenta;
 reg  [7:0]   counter_ora; 
@@ -42,6 +42,7 @@ localparam ASTEAPTA    = 3'b010;
 localparam COBORARE    = 3'b011;
 localparam UPDATE      = 3'b100;
 
+//Logica FSM-ului
 always @(posedge clk_i or negedge rst_ni) begin
   if(~rst_ni)
       stare_curenta <= IDLE;
@@ -55,7 +56,7 @@ always @(posedge clk_i or negedge rst_ni) begin
               stare_curenta <= ASTEAPTA;
 
           ASTEAPTA:
-              if(counter >= NR_TACTE_SENZOR && ~senzor_proxim_i)
+              if(counter_senzor >= NR_TACTE_SENZOR && ~senzor_proxim_i)
                   stare_curenta <= COBORARE;
           
           COBORARE:
@@ -111,10 +112,10 @@ end
 
 always @(posedge clk_i or negedge rst_ni) begin
   if(~rst_ni)
-    counter <= 0;
+    counter_senzor <= 0;
   else if (stare_curenta == ASTEAPTA)
-    counter <= counter + 1;
-  else counter <= 0;
+    counter_senzor <= counter_senzor + 1;
+  else counter_senzor <= 0;
 end
 
 always @(posedge clk_i or negedge rst_ni) begin
