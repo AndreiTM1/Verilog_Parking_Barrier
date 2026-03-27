@@ -20,6 +20,34 @@ module sistem_parcare_tb;
     // Ceas 100MHz
     always #5 clk_i = ~clk_i;
 
+    // Task pentru citire APB
+    // Task pentru citire APB cu verificare automata
+    task apb_read_check(input [1:0] addr, input [7:0] expected_data);
+        begin
+            @(posedge clk_i);
+            paddr_i   <= addr; 
+            pwrite_i  <= 0;      // Modul Citire
+            psel_i    <= 1;
+            penable_i <= 0;      // Faza de Setup (Standard APB)
+            
+            @(posedge clk_i);
+            penable_i <= 1;      // Faza de Access
+            
+            @(posedge clk_i);
+            // Verificarea datelor
+            if (prdata_o === expected_data) begin
+                $display("[%t] [PASS] Adresa %b | Citit: %h | Corect!", $time, addr, prdata_o);
+            end else begin
+                $display("[%t] [FAIL] Adresa %b | Citit: %h | Asteptat: %h !!!", $time, addr, prdata_o, expected_data);
+            end
+            
+            // Revenire la starea Idle
+            psel_i    <= 0; 
+            penable_i <= 0;
+            paddr_i   <= 2'bxx; // Curatam adresa pentru a vedea tranzitiile clar
+        end
+    endtask
+
     // Task pentru scriere APB
     task apb_write(input [1:0] addr, input [7:0] data);
         begin
@@ -64,10 +92,16 @@ module sistem_parcare_tb;
 
         // 4. Intra 10 masini (Parcarea are 10 locuri libere la inceput)
         $display("[%t] Incep sa intre 10 masini...", $time);
-        for (i = 0; i < 10; i = i + 1) begin
+        for (i = 0; i < 15; i = i + 1) begin
             trecere_masina(2'b01);
             $display("Masina %0d a intrat. Locuri: %0d", i+1, dut.nr_locuri_libere);
         end
+
+        // Verificam daca numarul de locuri este 0 (00000000 in hex/bin)
+        apb_read_check(2'b01, 8'd0); 
+        
+        // Verificam daca ora de start este cea configurata la inceput (8'd5)
+        apb_read_check(2'b10, 8'd5);
 
         // 5. Ies 3 masini
         $display("[%t] Ies 3 masini...", $time);

@@ -21,7 +21,7 @@ module sistem_parcare #(parameter NR_TACTE_SENZOR = 8'd20,
     output reg           stare_bariera_o
 );
 
-assign pready_o         = 1'b1;
+assign pready_o = 1'b1;
 
 reg  [2:0]   stare_curenta;
 reg  [3:0]   nr_locuri_libere; //adresa: ...
@@ -32,7 +32,7 @@ reg  [7:0]   counter_ora;
 reg  [4:0]   ora_start;
 reg  [4:0]   ora_stop;
 
-wire sistem_activ = (ora_curenta >= ora_start) && (ora_curenta < ora_stop);
+wire   sistem_activ     = (ora_curenta >= ora_start) && (ora_curenta < ora_stop);
 assign parcare_goala_o  = (nr_locuri_libere == 4'd15);
 assign parcare_plina_o  = (nr_locuri_libere == 4'd0);
 
@@ -94,6 +94,7 @@ always @(posedge clk_i or negedge rst_ni) begin
             ora_start <= pwdata_i[4:0];
 end
 
+//
 always @(posedge clk_i or negedge rst_ni) begin
     if (~rst_ni)
         ora_stop <= 5'd22;
@@ -101,6 +102,7 @@ always @(posedge clk_i or negedge rst_ni) begin
             ora_stop <= pwdata_i[4:0];
 end
 
+//
 always @(posedge clk_i or negedge rst_ni) begin
   if(~rst_ni)
     stare_bariera_o <= 0;
@@ -120,7 +122,7 @@ end
 
 always @(posedge clk_i or negedge rst_ni) begin
   if(~rst_ni)
-    nr_locuri_libere <= 4'd10;
+    nr_locuri_libere <= 4'd15;
   else if (stare_curenta == UPDATE) 
           if (intrare_iesire)
              nr_locuri_libere <= nr_locuri_libere - 1'b1;

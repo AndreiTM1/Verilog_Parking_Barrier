@@ -1,0 +1,2 @@
+Req si ack pe cate un bit
+
