@@ -1,5 +1,6 @@
 module sistem_parcare #(parameter NR_TACTE_SENZOR = 8'd20,
-                                  TACTE_PER_ORA   = 8'd200
+                                  TACTE_PER_ORA   = 8'd200,
+                                  NR_TOTAL_LOCURI = 15
 )(
     //semnale generale
     input                clk_i,
@@ -33,7 +34,7 @@ reg  [4:0]   ora_start;
 reg  [4:0]   ora_stop;
 
 wire   sistem_activ     = (ora_curenta >= ora_start) && (ora_curenta < ora_stop);
-assign parcare_goala_o  = (nr_locuri_libere == 4'd15);
+assign parcare_goala_o  = (nr_locuri_libere == NR_TOTAL_LOCURI);
 assign parcare_plina_o  = (nr_locuri_libere == 4'd0);
 
 localparam IDLE        = 3'b000;
