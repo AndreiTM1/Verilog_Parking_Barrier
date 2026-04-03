@@ -94,10 +94,8 @@ module sistem_parcare_tb;
             $display("Masina %0d a intrat. Locuri: %0d", i+1, dut.nr_locuri_libere);
         end
 
-        // Verificam daca numarul de locuri este 0 (00000000 in hex/bin)
         apb_read_check(2'b01, 8'd0); 
         
-        // Verificam daca ora de start este cea configurata la inceput (8'd5)
         apb_read_check(2'b10, 8'd5);
 
         // 5. Ies 3 masini
