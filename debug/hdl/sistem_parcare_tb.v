@@ -7,6 +7,7 @@ module sistem_parcare_tb;
     reg [7:0] pwdata_i;
     wire [7:0] prdata_o;
     wire pready_o, stare_bariera_o;
+    wire [3:0] nr_locuri_libere_o;
 
     // Instantiere DUT cu parametri redusi pentru simulare rapida
     // 1 ora = 100 tacte. 100 tacte * 10ns = 1000ns per ora simulata.
@@ -14,7 +15,7 @@ module sistem_parcare_tb;
         .clk_i(clk_i), .rst_ni(rst_ni), .paddr_i(paddr_i), .psel_i(psel_i),
         .penable_i(penable_i), .pwrite_i(pwrite_i), .pwdata_i(pwdata_i),
         .prdata_o(prdata_o), .pready_o(pready_o), .btn_i(btn_i),
-        .senzor_proxim_i(senzor_proxim_i), .stare_bariera_o(stare_bariera_o)
+        .senzor_proxim_i(senzor_proxim_i), .stare_bariera_o(stare_bariera_o), .nr_locuri_libere_o(nr_locuri_libere_o)
     );
 
     // Ceas 100MHz
