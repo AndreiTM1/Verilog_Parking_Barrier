@@ -6,23 +6,26 @@ module sistem_parcare #(parameter NR_TACTE_SENZOR = 8'd20,
     input                clk_i,
     input                rst_ni,
 //semnale APB
-    input      [1:0]     paddr_i,
+    input       [1:0]    paddr_i,
     input                psel_i,
     input                penable_i,
     input                pwrite_i,
-    input      [7:0]     pwdata_i,
-    output reg [7:0]     prdata_o,
+    input       [7:0]    pwdata_i,
+    output reg  [7:0]    prdata_o,
     output               pready_o,
 // interfata cu stimuli din exterior
-    input      [1:0]     btn_i,
+    input       [1:0]    btn_i,
     input                senzor_proxim_i,
 // interfata de iesire
     output               parcare_plina_o,
     output               parcare_goala_o,
-    output reg           stare_bariera_o
+    output reg           stare_bariera_o,
+    output      [3:0]    nr_locuri_libere_o
 );
 
 assign pready_o = 1'b1;
+
+assign nr_locuri_libere_o = nr_locuri_libere;
 
 reg  [2:0]   stare_curenta;
 reg  [3:0]   nr_locuri_libere; //adresa: ...
