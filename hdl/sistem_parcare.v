@@ -130,7 +130,7 @@ end
 // nr_locuri_libere creste sau scade in functie de intrarea sau iesirea unei masini
 always @(posedge clk_i or negedge rst_ni) begin
   if(~rst_ni)
-    nr_locuri_libere <= 4'd15;
+    nr_locuri_libere <= NR_TOTAL_LOCURI;
   else if (stare_curenta == UPDATE) 
           if (intrare_iesire)
              nr_locuri_libere <= nr_locuri_libere - 1'b1;
