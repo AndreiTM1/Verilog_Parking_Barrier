@@ -11,7 +11,7 @@ module sistem_parcare_tb;
 
     // Instantiere DUT cu parametri redusi pentru simulare rapida
     // 1 ora = 100 tacte. 100 tacte * 10ns = 1000ns per ora simulata.
-    sistem_parcare #(.NR_TACTE_SENZOR(8'd10), .TACTE_PER_ORA(8'd100), .NR_TOTAL_LOCAURI(8'd15)) dut (
+    sistem_parcare #(.NR_TACTE_SENZOR(8'd10), .TACTE_PER_ORA(8'd100), .NR_TOTAL_LOCURI(8'd15)) dut (
         .clk_i(clk_i), .rst_ni(rst_ni), .paddr_i(paddr_i), .psel_i(psel_i),
         .penable_i(penable_i), .pwrite_i(pwrite_i), .pwdata_i(pwdata_i),
         .prdata_o(prdata_o), .pready_o(pready_o), .btn_i(btn_i),
