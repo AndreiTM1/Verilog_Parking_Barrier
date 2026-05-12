@@ -33,11 +33,12 @@ reg  [4:0]   ora_curenta;
 reg  [7:0]   counter_ora; 
 reg  [4:0]   ora_start;
 reg  [4:0]   ora_stop;
+wire         sistem_activ; 
 
-wire   sistem_activ     = (ora_curenta >= ora_start) && (ora_curenta < ora_stop);
+assign sistem_activ       = (ora_curenta >= ora_start) && (ora_curenta < ora_stop);
 assign nr_locuri_libere_o = nr_locuri_libere;
-assign parcare_goala_o  = (nr_locuri_libere == NR_TOTAL_LOCURI);
-assign parcare_plina_o  = (nr_locuri_libere == 4'd0);
+assign parcare_goala_o    = (nr_locuri_libere == NR_TOTAL_LOCURI);
+assign parcare_plina_o    = (nr_locuri_libere == 4'd0);
 
 
 localparam IDLE        = 3'b000;
@@ -53,7 +54,8 @@ always @(posedge clk_i or negedge rst_ni) begin
   else begin
       case (stare_curenta)
           IDLE:
-              if(sistem_activ && ((btn_i == 2'b01 && nr_locuri_libere > 0) || (btn_i == 2'b10 && nr_locuri_libere < 15)))
+              if(sistem_activ && ((btn_i == 2'b01 && nr_locuri_libere > 0) 
+                    || (btn_i == 2'b10 && nr_locuri_libere < 15)))
                   stare_curenta <= RIDICARE;
           
           RIDICARE:

@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"name": "test",
+			"path": "../../../../proiectele_mele/esp32/test"
+		},
+		{
+			"name": "proiect_apl",
+			"path": "../../../../proiectele_mele/esp32/proiect_apl"
+		}
+	],
+	"settings": {}
+}
