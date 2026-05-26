@@ -6,16 +6,16 @@ module sistem_parcare #(parameter NR_TACTE_SENZOR = 8'd20,
     input                clk_i,
     input                rst_ni,
 //semnale APB
-    input       [1:0]    paddr_i,
-    input                psel_i,
-    input                penable_i,
-    input                pwrite_i,
-    input       [7:0]    pwdata_i,
-    output reg  [7:0]    prdata_o,
-    output               pready_o,
+    input       [1:0]    paddr_i,              // adresa registrilor
+    input                psel_i,               // indica selectia registrului
+    input                penable_i,            // semnal enable
+    input                pwrite_i,             // se scrie
+    input       [7:0]    pwdata_i,             // data care se scrie
+    output reg  [7:0]    prdata_o,             // data care se citeste
+    output               pready_o,             // semnal ready
 // interfata cu stimuli din exterior
-    input       [1:0]    btn_i,
-    input                senzor_proxim_i,
+    input       [1:0]    btn_i,                // semnal pe 2 biti aferent celor 2 butoane
+    input                senzor_proxim_i,      // semnalul de la senzor de proxim
 // interfata de iesire
     output               parcare_plina_o,
     output               parcare_goala_o,
@@ -25,50 +25,51 @@ module sistem_parcare #(parameter NR_TACTE_SENZOR = 8'd20,
 
 assign pready_o = 1'b1;
 
-reg  [2:0]   stare_curenta;
-reg  [3:0]   nr_locuri_libere; //adresa: ...
-reg  [7:0]   counter_senzor;
-reg          intrare_iesire; // 1 == intrare, 0 == iesire
-reg  [4:0]   ora_curenta;
-reg  [7:0]   counter_ora; 
-reg  [4:0]   ora_start;
-reg  [4:0]   ora_stop;
-wire         sistem_activ; 
+reg  [2:0]   stare_curenta;     // starea din FSM a sistemului
+reg  [3:0]   nr_locuri_libere;  // numarul de locuri libere
+reg  [7:0]   counter_senzor;    // pragul de tacte pana la urmatoarea citire a senzorului
+reg          intrare_iesire;    // daca se intra sau se iese; 1 == intrare, 0 == iesire
+reg  [4:0]   ora_curenta;       // ora curenta
+reg  [7:0]   counter_ora;       // pragul de tacte pana cand trece o ora simulata
+reg  [4:0]   ora_start;         // ora de incepere a functionarii sistemului
+reg  [4:0]   ora_stop;          // ora de stop a functionarii sistemului
+wire         sistem_activ;      // daca sistemul este in functiune sau nu
 
-assign sistem_activ       = (ora_curenta >= ora_start) && (ora_curenta < ora_stop);
-assign nr_locuri_libere_o = nr_locuri_libere;
-assign parcare_goala_o    = (nr_locuri_libere == NR_TOTAL_LOCURI);
-assign parcare_plina_o    = (nr_locuri_libere == 4'd0);
+assign sistem_activ       = (ora_curenta >= ora_start) && (ora_curenta < ora_stop); // activ doar in intervalul orar
+assign nr_locuri_libere_o = nr_locuri_libere;                           // registru trimis la iesire pentru numarul de locuri
+assign parcare_goala_o    = (nr_locuri_libere == NR_TOTAL_LOCURI);      // calcul parcare goala
+assign parcare_plina_o    = (nr_locuri_libere == 4'd0);                 // calcul parcare plina
 
 
-localparam IDLE        = 3'b000;
-localparam RIDICARE    = 3'b001;
-localparam ASTEAPTA    = 3'b010;
-localparam COBORARE    = 3'b011;
-localparam UPDATE      = 3'b100;
+localparam IDLE        = 3'b000;        // bariera nu face nimic, asteapta intrare sau iesire
+localparam RIDICARE    = 3'b001;        // se ridica
+localparam ASTEAPTA    = 3'b010;        // asteapta ca masina sa intre sau sa iese in functie de senzor
+localparam COBORARE    = 3'b011;        // coboara
+localparam UPDATE      = 3'b100;        // abea la final se actualizeaza numarul de locuri libere
 
 //Logica FSM-ului
 always @(posedge clk_i or negedge rst_ni) begin
   if(~rst_ni)
-      stare_curenta <= IDLE;
+      stare_curenta <= IDLE;    // default e in IDLE
   else begin
       case (stare_curenta)
-          IDLE:
+          IDLE:          // se ridica daca sistemul e activ si daca se intra/iese dintr-o parcare ~plina/~goala  
               if(sistem_activ && ((btn_i == 2'b01 && nr_locuri_libere > 0) 
                     || (btn_i == 2'b10 && nr_locuri_libere < 15)))
                   stare_curenta <= RIDICARE;
+
           
-          RIDICARE:
+          RIDICARE:     // trece direct in asteapta dupa un ceas
               stare_curenta <= ASTEAPTA;
 
-          ASTEAPTA:
+          ASTEAPTA:     // se coboara cand senzorul nu mai detecteaza nimic
               if(counter_senzor >= NR_TACTE_SENZOR && ~senzor_proxim_i)
                   stare_curenta <= COBORARE;
           
-          COBORARE:
+          COBORARE:     // dupa ce coboara se face update
               stare_curenta <= UPDATE;
 
-          UPDATE:
+          UPDATE:       // dupa ce se face update se duce in idle
               stare_curenta <= IDLE;
 
           default: stare_curenta <= IDLE;
